@@ -1,23 +1,57 @@
-import logo from './logo.svg';
 import './App.css';
+import Homescreen from './screens/Homescreen.js';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route
+} from "react-router-dom";
+import LoginScreen from './screens/LoginScreen.js';
+import { useEffect,useState } from 'react';
+import {auth} from "./firebase.js";
+import { onAuthStateChanged } from '@firebase/auth';
+import ProfileScreen from './screens/ProfileScreen';
 
 function App() {
+  const [user,setUser] = useState(null);
+  const [profileButton,setProfileButton] = useState(false);
+  useEffect(() =>{
+    const unsubscribe =  onAuthStateChanged(auth, (user) => {
+      if (user) {
+         console.log(user.email);
+      } else {
+        // User is signed out
+      }
+  });
+  return unsubscribe;
+  } ,[]);
+  const getUser = (user) =>{
+    if(user){
+      setUser(user);
+    }
+  }
+  const getProfileButton = (status) =>{
+    if(status)
+      setProfileButton(true);
+    else
+      setProfileButton(false);
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <Router>
+        {!user ? (
+          <LoginScreen getUser = {getUser}/>
+        ) : (
+        <Switch>
+          <Route path="/">
+            {!profileButton ? (
+              <Homescreen getProfileButton = {getProfileButton}/>
+            ) : (
+              <ProfileScreen getProfileButton = {getProfileButton}  />
+            )}
+          </Route>
+        </Switch>)}
+      </Router>
     </div>
   );
 }
